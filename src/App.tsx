@@ -46,7 +46,7 @@ function App() {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h1 style={styles.title}>BASEBALL GAME</h1>
+        <h1 style={styles.title}>BASEBALL</h1>
         <p style={styles.subtitle}>중복 없는 4자리 숫자를 입력하세요</p>
         
         <div style={styles.resultBadge}>{result}</div>
