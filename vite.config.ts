@@ -9,9 +9,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'cow_icon_512.png'],
       manifest: {
-        name: '소여준게임',
-        short_name: '소여준',
-        description: '여준이 게임을 즐기세요!',
+        name: '단우의앱',
+        short_name: '김단우의 앱',
+        description: '재밌는 게임을 즐기세요!',
         theme_color: '#1a73e8',
         icons: [
           {
