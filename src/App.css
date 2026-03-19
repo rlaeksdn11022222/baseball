@@ -1,6 +1,11 @@
-body {
+* {
   margin: 0;
-  background: black;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #000;
   overflow: hidden;
 }
 
