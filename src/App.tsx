@@ -22,12 +22,10 @@ export default function App() {
   const [ownedWeapons,   setOwnedWeapons]   = useState<number[]>([0]);
   const [equippedWeapon, setEquippedWeapon] = useState(0);
 
-  // 게임 루프에서 쓰는 ref들 (setState 호출 없이)
-  const equippedRef     = useRef(0);
-  const coinsRef        = useRef(0);
-  const ownedRef        = useRef<number[]>([0]);
-  const phaseBtnRef     = useRef(false);
-  const showPhaseBtnSet = useRef(setShowPhaseBtn);
+  const equippedRef = useRef(0);
+  const coinsRef    = useRef(0);
+  const ownedRef    = useRef<number[]>([0]);
+  const phaseBtnRef = useRef(false);
 
   useEffect(() => { equippedRef.current = equippedWeapon; }, [equippedWeapon]);
   useEffect(() => { ownedRef.current    = ownedWeapons;   }, [ownedWeapons]);
@@ -72,8 +70,13 @@ export default function App() {
 
     const cow = { x: canvas.width / 2, y: canvas.height / 2, r: 100, t: 0 };
 
+    // ── 100ms마다 ref → React state 동기화 (setState를 루프 밖에서만!) ──
+    const syncId = setInterval(() => {
+      setShowPhaseBtn(phaseBtnRef.current);
+    }, 100);
+
     const onMouseMove = (e: MouseEvent) => { mouseX = e.clientX; mouseY = e.clientY; };
-    const onClick     = (e: MouseEvent) => {
+    const onClick = (e: MouseEvent) => {
       if (dead || bossDead) return;
       const d = Math.hypot(e.clientX - cow.x, e.clientY - cow.y);
       if (d < cow.r) {
@@ -83,7 +86,6 @@ export default function App() {
         shake      = 15;
         laserTimer = 10;
 
-        // 코인은 ref만 업데이트 (setState 안 씀!)
         const earned = Math.floor(Math.random() * dmg) + 1;
         coinsRef.current += earned;
 
@@ -97,7 +99,7 @@ export default function App() {
         if (bossHp <= 0) {
           bossDead = true;
           phaseBtnRef.current = true;
-          showPhaseBtnSet.current(true);  // 이건 한 번만 호출
+          // setState 호출 없음! setInterval이 알아서 동기화
         }
       }
     };
@@ -119,10 +121,9 @@ export default function App() {
       phaseAnim     = 100;
       phaseAnimText = `PHASE ${phase + 1}`;
       phaseBtnRef.current = false;
-      showPhaseBtnSet.current(false);
+      // setState 호출 없음!
     };
 
-    /* ── 그리기 함수 ── */
     function drawLaser() {
       if (laserTimer <= 0) return;
       ctx.strokeStyle = "red"; ctx.lineWidth = 5;
@@ -179,9 +180,8 @@ export default function App() {
       ctx.fillStyle = "#FF6B6B"; ctx.font = "bold 36px sans-serif";
       ctx.fillText(`${phase+1}`, 252, 72);
 
-      // 코인 표시 (ref 값으로)
       ctx.fillStyle = "rgba(0,0,0,0.45)";
-      ctx.beginPath(); ctx.roundRect(16, 100, 200, 50, 12); ctx.fill();
+      ctx.beginPath(); ctx.roundRect(16, 100, 220, 50, 12); ctx.fill();
       ctx.fillStyle = "#FFD700"; ctx.font = "bold 14px sans-serif";
       ctx.fillText(`💰 ${coinsRef.current}코인  ⚔️ ${WEAPONS[equippedRef.current].name}`, 28, 130);
     }
@@ -235,7 +235,6 @@ export default function App() {
       ctx.textAlign = "left";
     }
 
-    /* ── 게임 루프 ── */
     const loop = () => {
       if (!running) return;
       ctx.save();
@@ -254,7 +253,6 @@ export default function App() {
             bossDead  = false;
             dead      = false;
             phaseBtnRef.current = false;
-            showPhaseBtnSet.current(false);
           }, 2500);
         }
 
@@ -293,15 +291,15 @@ export default function App() {
     return () => {
       running = false;
       cancelAnimationFrame(rafId);
+      clearInterval(syncId);
       canvas.removeEventListener("mousemove", onMouseMove);
       canvas.removeEventListener("click",     onClick);
       window.removeEventListener("resize",    resize);
     };
   }, []);
 
-  /* ── 상점 UI ── */
   const openShop = () => {
-    setCoins(coinsRef.current);  // 상점 열 때만 동기화!
+    setCoins(coinsRef.current);
     setShowShop(true);
   };
 
