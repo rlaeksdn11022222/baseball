@@ -13,3 +13,179 @@ canvas {
   display: block;
   cursor: none;
 }
+
+/* ── 상점 오버레이 ── */
+.shop-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.shop-box {
+  background: #1a1a2e;
+  border: 3px solid #FFD700;
+  border-radius: 20px;
+  padding: 32px;
+  width: 420px;
+  color: white;
+  font-family: sans-serif;
+}
+
+.shop-box h2 {
+  text-align: center;
+  font-size: 28px;
+  color: #FFD700;
+  margin-bottom: 8px;
+}
+
+.shop-coin {
+  text-align: center;
+  font-size: 18px;
+  color: #FFD700;
+  margin-bottom: 24px;
+}
+
+.shop-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.shop-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #16213e;
+  border: 2px solid #444;
+  border-radius: 12px;
+  padding: 12px 16px;
+  transition: border-color 0.2s;
+}
+
+.shop-item.selected {
+  border-color: #FFD700;
+  background: #1f3060;
+}
+
+.shop-item.owned {
+  border-color: #4CAF50;
+}
+
+.shop-item img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.shop-item-info {
+  flex: 1;
+}
+
+.shop-item-info h3 {
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.shop-item-info p {
+  font-size: 13px;
+  color: #aaa;
+}
+
+.shop-item-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.shop-item-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.shop-item-btn.buy {
+  background: #FFD700;
+  color: #000;
+}
+
+.shop-item-btn.equip {
+  background: #4CAF50;
+  color: white;
+}
+
+.shop-item-btn.equipped {
+  background: #666;
+  color: white;
+}
+
+.shop-close {
+  margin-top: 20px;
+  width: 100%;
+  padding: 12px;
+  background: #e74c3c;
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.shop-close:hover {
+  background: #c0392b;
+}
+
+/* ── 페이즈 넘어가기 버튼 ── */
+.phase-btn-overlay {
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+.phase-btn {
+  padding: 16px 40px;
+  background: linear-gradient(135deg, #FFD700, #FF6B00);
+  border: none;
+  border-radius: 50px;
+  font-size: 20px;
+  font-weight: bold;
+  color: #000;
+  cursor: pointer;
+  box-shadow: 0 0 30px rgba(255, 200, 0, 0.6);
+  animation: pulsebtn 0.8s ease infinite alternate;
+}
+
+@keyframes pulsebtn {
+  from { transform: scale(1); box-shadow: 0 0 20px rgba(255,200,0,0.5); }
+  to   { transform: scale(1.06); box-shadow: 0 0 40px rgba(255,200,0,0.9); }
+}
+
+/* ── 상점 열기 버튼 ── */
+.open-shop-btn {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 9;
+  padding: 10px 20px;
+  background: #FFD700;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #000;
+  box-shadow: 0 4px 15px rgba(255,215,0,0.4);
+}
+
+.open-shop-btn:hover {
+  background: #FFC200;
+}
