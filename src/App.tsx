@@ -54,29 +54,30 @@ export default function App() {
   const showShopRef = useRef(false);
   const nextPhaseRef = useRef<() => void>(() => {});
 
-  useEffect(() => {
-    coinsRef.current = coins;
-  }, [coins]);
-
-  useEffect(() => {
-    ownedRef.current = ownedWeapons;
-  }, [ownedWeapons]);
-
-  useEffect(() => {
-    equippedRef.current = equippedWeapon;
-  }, [equippedWeapon]);
-
-  useEffect(() => {
-    showShopRef.current = showShop;
-  }, [showShop]);
+  useEffect(() => { coinsRef.current = coins; }, [coins]);
+  useEffect(() => { ownedRef.current = ownedWeapons; }, [ownedWeapons]);
+  useEffect(() => { equippedRef.current = equippedWeapon; }, [equippedWeapon]);
+  useEffect(() => { showShopRef.current = showShop; }, [showShop]);
 
   useEffect(() => {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
 
+    let cw = window.innerWidth;
+    let ch = window.innerHeight;
+
     const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      cw = window.innerWidth;
+      ch = window.innerHeight;
+      const dpr = window.devicePixelRatio || 1;
+      
+      canvas.width = cw * dpr;
+      canvas.height = ch * dpr;
+      canvas.style.width = `${cw}px`;
+      canvas.style.height = `${ch}px`;
+      
+      ctx.resetTransform();
+      ctx.scale(dpr, dpr);
     };
 
     resize();
@@ -102,8 +103,8 @@ export default function App() {
     let playerHp = PLAYER_MAX_HP;
     let score = 0;
     let shake = 0;
-    let mouseX = 0;
-    let mouseY = 0;
+    let mouseX = -100; // 초기 마우스 위치 화면 밖으로
+    let mouseY = -100;
     let laserTimer = 0;
     let dead = false;
     let bossDead = false;
@@ -117,7 +118,7 @@ export default function App() {
     let phaseAnim = 0;
     let phaseAnimText = "";
 
-    const cow = { x: canvas.width / 2, y: canvas.height / 2, r: 100, t: 0 };
+    const cow = { x: cw / 2, y: ch / 2, r: 100, t: 0 };
 
     const syncPhaseButton = () => {
       setShowPhaseBtn(bossDead);
@@ -248,7 +249,7 @@ export default function App() {
       const barW = 280;
       const barH = 22;
       const barX = 16;
-      const barY = canvas.height - 50;
+      const barY = ch - 50;
       const ratio = Math.max(0, playerHp / PLAYER_MAX_HP);
 
       ctx.fillStyle = "rgba(0,0,0,0.5)";
@@ -318,11 +319,11 @@ export default function App() {
 
       ctx.save();
       ctx.globalAlpha = alpha;
-      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.translate(cw / 2, ch / 2);
       ctx.scale(1 + (1 - progress) * 0.4, 1 + (1 - progress) * 0.4);
 
       ctx.fillStyle = `rgba(255,100,0,${alpha * 0.15})`;
-      ctx.fillRect(-canvas.width, -canvas.height, canvas.width * 2, canvas.height * 2);
+      ctx.fillRect(-cw, -ch, cw * 2, ch * 2);
 
       ctx.font = "bold 100px sans-serif";
       ctx.textAlign = "center";
@@ -367,7 +368,9 @@ export default function App() {
         const p = coinPopups[i];
         ctx.save();
         ctx.globalAlpha = p.life / 50;
-        if (coinImg.complete) {
+        
+        // 이미지 로드 검증 (naturalWidth 사용)
+        if (coinImg.complete && coinImg.naturalWidth > 0) {
           ctx.drawImage(coinImg, p.x - 12, p.y - 12, 24, 24);
         } else {
           ctx.fillStyle = "#FFD700";
@@ -375,6 +378,7 @@ export default function App() {
           ctx.arc(p.x, p.y, 10, 0, Math.PI * 2);
           ctx.fill();
         }
+        
         ctx.fillStyle = "#FFD700";
         ctx.font = "bold 16px sans-serif";
         ctx.textAlign = "center";
@@ -389,25 +393,33 @@ export default function App() {
 
     function drawDead() {
       ctx.fillStyle = "rgba(200,0,0,0.6)";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, cw, ch);
       ctx.fillStyle = "white";
       ctx.font = "bold 80px sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("💀 사망!", canvas.width / 2, canvas.height / 2 - 20);
+      ctx.fillText("💀 사망!", cw / 2, ch / 2 - 20);
       ctx.font = "30px sans-serif";
-      ctx.fillText("이전 페이즈로 돌아갑니다...", canvas.width / 2, canvas.height / 2 + 50);
+      ctx.fillText("이전 페이즈로 돌아갑니다...", cw / 2, ch / 2 + 50);
       ctx.textAlign = "left";
+    }
+
+    function drawCustomCursor() {
+      const weaponImg = weaponImgs[equippedRef.current];
+      if (weaponImg.complete && weaponImg.naturalWidth > 0) {
+        ctx.drawImage(weaponImg, mouseX - 30, mouseY - 30, 60, 60);
+      } else {
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.arc(mouseX, mouseY, 18, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
 
     const loop = () => {
       if (!running) return;
 
-      ctx.save();
-      if (shake > 0) {
-        ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
-        shake--;
-      }
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // 흔들림 잔상 방지를 위해 캔버스 전체 클리어를 가장 먼저 실행
+      ctx.clearRect(0, 0, cw, ch);
 
       if (!dead) {
         playerHp -= HP_DRAIN_RATE;
@@ -426,13 +438,20 @@ export default function App() {
           }, 2500);
         }
 
+        ctx.save(); // 화면 흔들림용 Save
+        if (shake > 0) {
+          ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
+          shake--;
+        }
+
         const speed = 0.05 + score * 0.001;
         cow.t += speed;
-        cow.x = canvas.width / 2 + Math.sin(cow.t) * (120 + phase * 30);
+        cow.x = cw / 2 + Math.sin(cow.t) * (120 + phase * 30);
+        cow.y = ch / 2; // Resize를 대비해 Y축도 매 프레임 중앙 정렬
 
         const size = cow.r * 2;
         const currentCow = cowImgs[phase % PHASES];
-        if (currentCow.complete) {
+        if (currentCow.complete && currentCow.naturalWidth > 0) {
           ctx.drawImage(currentCow, cow.x - cow.r, cow.y - cow.r, size, size);
         } else {
           ctx.fillStyle = "#ff9fb3";
@@ -457,23 +476,17 @@ export default function App() {
         }
 
         drawPopups();
+        
+        // 흔들림 효과 원복 (이후에 그려지는 UI나 마우스는 흔들리지 않음)
+        ctx.restore(); 
 
-        const weaponImg = weaponImgs[equippedRef.current];
-        if (weaponImg.complete) {
-          ctx.drawImage(weaponImg, mouseX - 30, mouseY - 30, 60, 60);
-        } else {
-          ctx.fillStyle = "white";
-          ctx.beginPath();
-          ctx.arc(mouseX, mouseY, 18, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        ctx.restore();
         drawScoreUI();
         drawPhaseAnim();
         drawPlayerHpBar();
+        
+        // 마우스 커서는 흔들림 효과가 풀린 뒤 마지막에 그립니다.
+        drawCustomCursor();
       } else {
-        ctx.restore();
         drawDead();
       }
 
